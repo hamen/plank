@@ -1,12 +1,5 @@
 package timber.log;
 
-import android.util.Log;
-
-import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.CountDownLatch;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -15,36 +8,44 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowLog;
 
+import android.util.Log;
+
+import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
+
+import static junit.framework.Assert.fail;
 import static org.fest.assertions.api.Assertions.assertThat;
-import static org.junit.Assert.fail;
 import static org.robolectric.shadows.ShadowLog.LogItem;
 
 @RunWith(RobolectricTestRunner.class) //
 @Config(manifest = Config.NONE)
 public class TimberTest {
   @Before @After public void setUpAndTearDown() {
-    Timber.uprootAll();
+    Plank.uprootAll();
   }
 
   // NOTE: This class references the line number. Keep it at the top so it does not change.
   @Test public void debugTreeCanAlterCreatedTag() {
-    Timber.plant(new Timber.DebugTree() {
+    Plank.plant(new Plank.DebugTree() {
       @Override protected String createStackElementTag(StackTraceElement element) {
         return super.createStackElementTag(element) + ':' + element.getLineNumber();
       }
     });
 
-    Timber.d("Test");
+    Plank.d("Test");
 
     assertLog()
-        .hasDebugMessage("TimberTest:37", "Test")
+        .hasDebugMessage("TimberTest:38", "Test")
         .hasNoMoreMessages();
   }
 
   @Test public void recursion() {
-    Timber.Tree timber = Timber.asTree();
+    Plank.Tree timber = Plank.asTree();
     try {
-      Timber.plant(timber);
+      Plank.plant(timber);
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage("Cannot plant Timber into itself.");
@@ -53,7 +54,7 @@ public class TimberTest {
 
   @Test public void nullTree() {
     try {
-      Timber.plant(null);
+      Plank.plant(null);
       fail();
     } catch (NullPointerException e) {
       assertThat(e).hasMessage("tree == null");
@@ -61,17 +62,17 @@ public class TimberTest {
   }
 
   @Test public void forestReturnsAllPlanted() {
-    Timber.DebugTree tree1 = new Timber.DebugTree();
-    Timber.DebugTree tree2 = new Timber.DebugTree();
-    Timber.plant(tree1);
-    Timber.plant(tree2);
+    Plank.DebugTree tree1 = new Plank.DebugTree();
+    Plank.DebugTree tree2 = new Plank.DebugTree();
+    Plank.plant(tree1);
+    Plank.plant(tree2);
 
-    assertThat(Timber.forest()).containsExactly(tree1, tree2);
+    assertThat(Plank.forest()).containsExactly(tree1, tree2);
   }
 
   @Test public void uprootThrowsIfMissing() {
     try {
-      Timber.uproot(new Timber.DebugTree());
+      Plank.uproot(new Plank.DebugTree());
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessageStartingWith("Cannot uproot tree which is not planted: ");
@@ -79,13 +80,13 @@ public class TimberTest {
   }
 
   @Test public void uprootRemovesTree() {
-    Timber.DebugTree tree1 = new Timber.DebugTree();
-    Timber.DebugTree tree2 = new Timber.DebugTree();
-    Timber.plant(tree1);
-    Timber.plant(tree2);
-    Timber.d("First");
-    Timber.uproot(tree1);
-    Timber.d("Second");
+    Plank.DebugTree tree1 = new Plank.DebugTree();
+    Plank.DebugTree tree2 = new Plank.DebugTree();
+    Plank.plant(tree1);
+    Plank.plant(tree2);
+    Plank.d("First");
+    Plank.uproot(tree1);
+    Plank.d("Second");
 
     assertLog()
         .hasDebugMessage("TimberTest", "First")
@@ -95,13 +96,13 @@ public class TimberTest {
   }
 
   @Test public void uprootAllRemovesAll() {
-    Timber.DebugTree tree1 = new Timber.DebugTree();
-    Timber.DebugTree tree2 = new Timber.DebugTree();
-    Timber.plant(tree1);
-    Timber.plant(tree2);
-    Timber.d("First");
-    Timber.uprootAll();
-    Timber.d("Second");
+    Plank.DebugTree tree1 = new Plank.DebugTree();
+    Plank.DebugTree tree2 = new Plank.DebugTree();
+    Plank.plant(tree1);
+    Plank.plant(tree2);
+    Plank.d("First");
+    Plank.uprootAll();
+    Plank.d("Second");
 
     assertLog()
         .hasDebugMessage("TimberTest", "First")
@@ -110,8 +111,8 @@ public class TimberTest {
   }
 
   @Test public void noArgsDoesNotFormat() {
-    Timber.plant(new Timber.DebugTree());
-    Timber.d("te%st");
+    Plank.plant(new Plank.DebugTree());
+    Plank.d("te%st");
 
     assertLog()
         .hasDebugMessage("TimberTest", "te%st")
@@ -119,8 +120,8 @@ public class TimberTest {
   }
 
   @Test public void debugTreeTagGeneration() {
-    Timber.plant(new Timber.DebugTree());
-    Timber.d("Hello, world!");
+    Plank.plant(new Plank.DebugTree());
+    Plank.d("Hello, world!");
 
     assertLog()
         .hasDebugMessage("TimberTest", "Hello, world!")
@@ -128,14 +129,14 @@ public class TimberTest {
   }
 
   @Test public void debugTreeTagGenerationStripsAnonymousClassMarker() {
-    Timber.plant(new Timber.DebugTree());
+    Plank.plant(new Plank.DebugTree());
     new Runnable() {
       @Override public void run() {
-        Timber.d("Hello, world!");
+        Plank.d("Hello, world!");
 
         new Runnable() {
           @Override public void run() {
-            Timber.d("Hello, world!");
+            Plank.d("Hello, world!");
           }
         }.run();
       }
@@ -148,8 +149,8 @@ public class TimberTest {
   }
 
   @Test public void debugTreeCustomTag() {
-    Timber.plant(new Timber.DebugTree());
-    Timber.tag("Custom").d("Hello, world!");
+    Plank.plant(new Plank.DebugTree());
+    Plank.tag("Custom").d("Hello, world!");
 
     assertLog()
         .hasDebugMessage("Custom", "Hello, world!")
@@ -157,20 +158,20 @@ public class TimberTest {
   }
 
   @Test public void messageWithException() {
-    Timber.plant(new Timber.DebugTree());
+    Plank.plant(new Plank.DebugTree());
     NullPointerException datThrowable = new NullPointerException();
-    Timber.e(datThrowable, "OMFG!");
+    Plank.e(datThrowable, "OMFG!");
 
     assertExceptionLogged("OMFG!", "java.lang.NullPointerException");
   }
 
   @Test public void exceptionFromSpawnedThread() throws InterruptedException {
-    Timber.plant(new Timber.DebugTree());
+    Plank.plant(new Plank.DebugTree());
     final NullPointerException datThrowable = new NullPointerException();
     final CountDownLatch latch = new CountDownLatch(1);
     new Thread() {
       @Override public void run() {
-        Timber.e(datThrowable, "OMFG!");
+        Plank.e(datThrowable, "OMFG!");
         latch.countDown();
       }
     }.run();
@@ -179,16 +180,16 @@ public class TimberTest {
   }
 
   @Test public void nullMessageWithThrowable() {
-    Timber.plant(new Timber.DebugTree());
+    Plank.plant(new Plank.DebugTree());
     final NullPointerException datThrowable = new NullPointerException();
-    Timber.e(datThrowable, null);
+    Plank.e(datThrowable, null);
 
     assertExceptionLogged("", "java.lang.NullPointerException");
   }
 
   @Test public void chunkAcrossNewlinesAndLimit() {
-    Timber.plant(new Timber.DebugTree());
-    Timber.d(repeat('a', 3000) + '\n' + repeat('b', 6000) + '\n' + repeat('c', 3000));
+    Plank.plant(new Plank.DebugTree());
+    Plank.d(repeat('a', 3000) + '\n' + repeat('b', 6000) + '\n' + repeat('c', 3000));
 
     assertLog()
         .hasDebugMessage("TimberTest", repeat('a', 3000))
@@ -199,32 +200,32 @@ public class TimberTest {
   }
 
   @Test public void nullMessageWithoutThrowable() {
-    Timber.plant(new Timber.DebugTree());
-    Timber.d(null);
+    Plank.plant(new Plank.DebugTree());
+    Plank.d(null);
 
     assertLog().hasNoMoreMessages();
   }
 
   @Test public void logMessageCallback() {
     final List<String> logs = new ArrayList<String>();
-    Timber.plant(new Timber.DebugTree() {
+    Plank.plant(new Plank.DebugTree() {
       @Override protected void log(int priority, String tag, String message, Throwable t) {
         logs.add(priority + " " + tag + " " + message);
       }
     });
 
-    Timber.v("Verbose");
-    Timber.tag("Custom").v("Verbose");
-    Timber.d("Debug");
-    Timber.tag("Custom").d("Debug");
-    Timber.i("Info");
-    Timber.tag("Custom").i("Info");
-    Timber.w("Warn");
-    Timber.tag("Custom").w("Warn");
-    Timber.e("Error");
-    Timber.tag("Custom").e("Error");
-    Timber.wtf("Assert");
-    Timber.tag("Custom").wtf("Assert");
+    Plank.v("Verbose");
+    Plank.tag("Custom").v("Verbose");
+    Plank.d("Debug");
+    Plank.tag("Custom").d("Debug");
+    Plank.i("Info");
+    Plank.tag("Custom").i("Info");
+    Plank.w("Warn");
+    Plank.tag("Custom").w("Warn");
+    Plank.e("Error");
+    Plank.tag("Custom").e("Error");
+    Plank.wtf("Assert");
+    Plank.tag("Custom").wtf("Assert");
 
     assertThat(logs).containsExactly( //
         "2 TimberTest Verbose", //
@@ -243,14 +244,14 @@ public class TimberTest {
   }
 
   @Test public void logAtSpecifiedPriority() {
-    Timber.plant(new Timber.DebugTree());
+    Plank.plant(new Plank.DebugTree());
 
-    Timber.log(Log.VERBOSE, "Hello, World!");
-    Timber.log(Log.DEBUG, "Hello, World!");
-    Timber.log(Log.INFO, "Hello, World!");
-    Timber.log(Log.WARN, "Hello, World!");
-    Timber.log(Log.ERROR, "Hello, World!");
-    Timber.log(Log.ASSERT, "Hello, World!");
+    Plank.log(Log.VERBOSE, "Hello, World!");
+    Plank.log(Log.DEBUG, "Hello, World!");
+    Plank.log(Log.INFO, "Hello, World!");
+    Plank.log(Log.WARN, "Hello, World!");
+    Plank.log(Log.ERROR, "Hello, World!");
+    Plank.log(Log.ASSERT, "Hello, World!");
 
     assertLog()
         .hasVerboseMessage("TimberTest", "Hello, World!")
@@ -263,13 +264,13 @@ public class TimberTest {
   }
 
   @Test public void formatting() {
-    Timber.plant(new Timber.DebugTree());
-    Timber.v("Hello, %s!", "World");
-    Timber.d("Hello, %s!", "World");
-    Timber.i("Hello, %s!", "World");
-    Timber.w("Hello, %s!", "World");
-    Timber.e("Hello, %s!", "World");
-    Timber.wtf("Hello, %s!", "World");
+    Plank.plant(new Plank.DebugTree());
+    Plank.v("Hello, %s!", "World");
+    Plank.d("Hello, %s!", "World");
+    Plank.i("Hello, %s!", "World");
+    Plank.w("Hello, %s!", "World");
+    Plank.e("Hello, %s!", "World");
+    Plank.wtf("Hello, %s!", "World");
 
     assertLog()
         .hasVerboseMessage("TimberTest", "Hello, World!")
@@ -282,17 +283,17 @@ public class TimberTest {
   }
 
   @Test public void isLoggableControlsLogging() {
-    Timber.plant(new Timber.DebugTree() {
+    Plank.plant(new Plank.DebugTree() {
       @Override protected boolean isLoggable(int priority) {
         return priority == Log.INFO;
       }
     });
-    Timber.v("Hello, World!");
-    Timber.d("Hello, World!");
-    Timber.i("Hello, World!");
-    Timber.w("Hello, World!");
-    Timber.e("Hello, World!");
-    Timber.wtf("Hello, World!");
+    Plank.v("Hello, World!");
+    Plank.d("Hello, World!");
+    Plank.i("Hello, World!");
+    Plank.w("Hello, World!");
+    Plank.e("Hello, World!");
+    Plank.wtf("Hello, World!");
 
     assertLog()
         .hasInfoMessage("TimberTest", "Hello, World!")
@@ -300,8 +301,8 @@ public class TimberTest {
   }
 
   @Test public void logsUnknownHostExceptions() {
-    Timber.plant(new Timber.DebugTree());
-    Timber.e(new UnknownHostException(), null);
+    Plank.plant(new Plank.DebugTree());
+    Plank.e(new UnknownHostException(), null);
 
     assertExceptionLogged("", "UnknownHostException");
   }
