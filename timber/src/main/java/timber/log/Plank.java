@@ -1,5 +1,7 @@
 package timber.log;
 
+import org.jetbrains.annotations.NonNls;
+
 import android.util.Log;
 
 import java.io.PrintWriter;
@@ -8,12 +10,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.jetbrains.annotations.NonNls;
 
 import static java.util.Collections.unmodifiableList;
 
 /** Logging for lazy people. */
-public final class Timber {
+public final class Plank {
   /** Log a verbose message with optional format args. */
   public static void v(@NonNls String message, Object... args) {
     TREE_OF_SOULS.v(message, args);
@@ -265,7 +266,7 @@ public final class Timber {
     }
   };
 
-  private Timber() {
+  private Plank() {
     throw new AssertionError("No instances.");
   }
 
