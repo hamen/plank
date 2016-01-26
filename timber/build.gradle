@@ -1,5 +1,8 @@
 apply plugin: 'com.android.library'
 apply plugin: 'checkstyle'
+apply plugin: 'com.github.dcendents.android-maven'
+
+group = 'com.github.hamen'
 
 task checkstyle(type: Checkstyle) {
   configFile rootProject.file('checkstyle.xml')
@@ -24,6 +27,26 @@ android {
   defaultConfig {
     minSdkVersion rootProject.ext.minSdkVersion
     consumerProguardFiles 'consumer-proguard-rules.pro'
+  }
+
+  // default build flavour
+  defaultPublishConfig "productionRelease"
+  // true to publish all flavour artifacts
+  publishNonDefault true
+}
+
+// Publish default flavour as main artifact, otherwise the maven pom is not generated
+if (android.productFlavors.size() > 0) {
+  android.libraryVariants.all { variant ->
+    if (android.publishNonDefault && variant.name == android.defaultPublishConfig) {
+      def bundleTask = tasks["bundle${name.capitalize()}"]
+      artifacts {
+        archives(bundleTask.archivePath) {
+          classifier null
+          builtBy bundleTask
+        }
+      }
+    }
   }
 }
 
@@ -55,3 +78,6 @@ project.afterEvaluate {
 }
 
 // apply from: rootProject.file('gradle/gradle-mvn-push.gradle')
+dependencies {
+    testCompile 'junit:junit:4.12'
+}
